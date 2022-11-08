@@ -1,0 +1,3 @@
+- Model Based clustering, using Gaussian, Poisson and Multinomial mixture depending on a variable's type.
+- Uses Stochastic Expectation Maximization.
+- Proposed by Modal-Team from Inria Lille in 2015

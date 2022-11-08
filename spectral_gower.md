@@ -1,0 +1,4 @@
+- Uses an affinity matrix built upon K-Prototypes's distance (can be seen as a graph)
+- Computes its first k eigenvectors (corresponding to smallest eigenvalues)
+- Each row in the result matrix corresponds to a graph node
+- Performs K-Means over this matrix
