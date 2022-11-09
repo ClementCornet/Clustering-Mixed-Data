@@ -3,8 +3,6 @@ import pandas as pd
 from types import NoneType
 import prince
 import plotly.express as px
-from plotly.subplots import make_subplots
-import plotly.graph_objects as go
 
 
 import algos.UMAP_HDBSCAN.umap_hdbscan as umap_hdbscan
@@ -15,10 +13,17 @@ from sklearn.metrics import silhouette_score
 import gower
 import umap
 
+import utilities.generate_dataset
+
+#import sys
+#from pandas_profiling import ProfileReport
+#import streamlit_pandas_profiling as stpp
+
+
 
 def choose_data():
     """ Choose between Sample Datasets or user-uploaded """
-    data_choice = st.radio('Select Data', ['Existing Data', 'Upload Own Data'])
+    data_choice = st.radio('Select Data', ['Existing Data', 'Upload Own Data', 'Generated Dataset'])
     df = pd.DataFrame()
     if data_choice == 'Upload Own Data':
         up = st.file_uploader('Upload File')
@@ -26,14 +31,10 @@ def choose_data():
         if up:
             df = pd.read_csv(up)
             st.dataframe(df)
-            #st.write(df.columns)
-            #return df
+
             
-    # TODO : update list of sample datasets with usable ones
     if data_choice == 'Existing Data':
         select = st.selectbox('Choose Existing Dataset', [' --- Choose Dataset --- ',
-                                                            #'test', 
-                                                            #'test again',
                                                             'Heart Failure Short',
                                                             'Heart Failure Long',
                                                             'Contraceptive Method Choice',
@@ -46,20 +47,43 @@ def choose_data():
                 st.dataframe(df)
             except:
                 st.empty()
-            #st.write(df.columns)
-            #truth_col = st.selectbox('Use a column as True Clusers?',)
-            #return df
+
+    
+    if data_choice == 'Generated Dataset':
+        
+        gen_k = st.number_input('Length of data to generate', min_value=10, value=200, step=1)
+        n_clusters = st.slider('Number of clusters to generate:',2,9)
+        c1,c2 = st.columns([1,1])
+        n_num = c1.slider('Numerical Features:',1,10,2)
+        n_cat = c2.slider('Categorical Features:',1,10,2)
+        d1,d2 = st.columns([1,1])
+        cat_unq = d1.slider('Distinct values for categorical features',2,5,4)
+        clust_std = d2.slider('Standard Deviation of the Clusters', 1.0,10.0,0.1)
+        df = utilities.generate_dataset.generate(n_rows=gen_k,
+                                                n_clusters=n_clusters,
+                                                n_cat=n_cat,
+                                                n_num=n_num,
+                                                cat_unique=cat_unq,
+                                                cluster_std=clust_std)
+        st.dataframe(df)    
 
     if df.shape != (0,0):
         numerical_columns = df.select_dtypes('number').columns
         for col in numerical_columns:
             if df[col].nunique() < 5:
                 df[col] = df[col].astype('object')
+
+    #report = ProfileReport(df.reset_index())
+    #stpp.st_profile_report(report)
+    
     return df
 
 def true_clusters(df):
-    """Let the user define if a column represent 'true clusters'"""
+    """Let the user define if a column represent 'true clusters'. 
+    Auto for generated datasets"""
     if min(df.shape) > 0 :
+        if 'truth' in df.columns:
+            return df.pop('truth')
         opt = ['No']
         opt.extend(list(df.columns))
         choice = st.selectbox('Use a column as true clusters?', opt)
