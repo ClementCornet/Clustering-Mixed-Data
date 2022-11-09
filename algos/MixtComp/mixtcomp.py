@@ -1,3 +1,4 @@
+
 import pandas as pd
 import json
 import os
@@ -46,7 +47,7 @@ def process(df, k):
 
     ### R PROCESS
 
-    check_output("Rscript mixtcomp2.R", shell=True).decode()
+    check_output("Rscript algos/MixtComp/mixtcomp.R", shell=True).decode()
 
     clusters = pd.read_csv('mixtcomp_temp.csv')
 
@@ -58,3 +59,5 @@ def process(df, k):
     os.remove('temp_data.csv')
     os.remove('mixtcomp_temp.csv')
     return df
+
+

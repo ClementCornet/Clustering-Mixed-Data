@@ -24,7 +24,7 @@ def page():
     }
     st.write(describe[data])
 
-    filepath = 'heatmaps/' +'_'.join(data.split()) + f'_{index}.csv'
+    filepath = 'data/heatmaps/' +'_'.join(data.split()) + f'_{index}.csv'
 
     heat = pd.read_csv(filepath, index_col=0)
     #c1, c2 = st.columns([1,1])

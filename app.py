@@ -1,6 +1,5 @@
-from cv2 import CHAIN_APPROX_NONE
 import streamlit as st
-from algo import go_to_page
+from utilities.template import go_to_page
 
 st.set_page_config(page_title='Mixed Clustering',page_icon='favicon.png')
 hide_streamlit_style = """
@@ -18,8 +17,6 @@ with st.sidebar:
                                             "K-Prototype",
                                             "Hierarchical with Gower Distance",
                                             "K-Means using FAMD",
-                                            #"K-Prototype with new distance",
-                                            #"Hierarchical with K-Prototype's distance",
                                             "Kamila",
                                             "Modha-Spangler",
                                             "MixtComp",

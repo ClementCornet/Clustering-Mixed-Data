@@ -1,16 +1,16 @@
 import streamlit as st
 import pandas as pd
-import kproto
-import hierar_gower
-import famd_kmeans
-import kamila
-import msclust
-import mixtcomp
-import umap_hdbscan
-import spectral_gower
-import comparisons
+import algos.KPrototype.kproto as kproto
+import algos.Hierarchical_Gower.hierar_gower as hierar_gower
+import algos.FAMD_KMeans.famd_kmeans as famd_kmeans
+import algos.Kamila.kamila as kamila
+import algos.ModhaSpangler.msclust as msclust
+import algos.MixtComp.mixtcomp as mixtcomp
+import algos.UMAP_HDBSCAN.umap_hdbscan as umap_hdbscan
+import algos.Spectral.spectral as spectral
+import utilities.comparisons as comparisons
 
-import helpers
+import utilities.helpers as helpers
 from types import NoneType
 
 
@@ -18,21 +18,21 @@ def go_to_page(algo_name):
     if algo_name == ' --- Choose Algorithm --- ':
         land_page()
     if algo_name == 'K-Prototype':
-        algo_page(algo_name, kproto.process, 'kproto.md')
+        algo_page(algo_name, kproto.process, 'algos\KPrototype\kproto.md')
     if algo_name == 'Hierarchical with Gower Distance':
-        algo_page(algo_name, hierar_gower.process, 'hierar_gower.md')
+        algo_page(algo_name, hierar_gower.process, 'algos\Hierarchical_Gower\hierar_gower.md')
     if algo_name == 'K-Means using FAMD':
-        algo_page(algo_name, famd_kmeans.process, 'famd_kmeans.md')
+        algo_page(algo_name, famd_kmeans.process, r'algos\FAMD_KMeans\famd_kmeans.md')
     if algo_name == 'Kamila':
-        algo_page(algo_name, kamila.process, 'kamila.md')
+        algo_page(algo_name, kamila.process, 'algos\Kamila\kamila.md')
     if algo_name == 'Modha-Spangler':
-        algo_page(algo_name, msclust.process, 'msclust.md')
+        algo_page(algo_name, msclust.process, 'algos\ModhaSpangler\msclust.md')
     if algo_name == 'MixtComp':
-        algo_page(algo_name, mixtcomp.process, 'mixtcomp.md')
+        algo_page(algo_name, mixtcomp.process, 'algos\MixtComp\mixtcomp.md')
     if algo_name == 'UMAP-HDBSCAN':
-        algo_page(algo_name, umap_hdbscan.process, 'umap_hdbscan.md')
+        algo_page(algo_name, umap_hdbscan.process, r'algos\UMAP_HDBSCAN\umap_hdbscan.md')
     if algo_name.startswith('Spectral'):
-        algo_page(algo_name, spectral_gower.process, 'spectral_gower.md')
+        algo_page(algo_name, spectral.process, 'algos\Spectral\spectral.md')
     if algo_name == 'Comparisons':
         comparisons.page()
 
@@ -81,7 +81,7 @@ def land_page():
     st.write("""To visualize the different clusters, we use dimensionality reduction algorithms such as 
                     FMAD and UMAP to plot our clusters in 3D.""")
     
-    toy = pd.read_csv('heart_failure_short.csv')
+    toy = pd.read_csv('data/heart_failure_short.csv')
     toy['cluster'] = toy['age'].apply(lambda x: np.random.randint(0,2))
     helpers.FAMD_Plot(toy)
     st.write("""FAMD (Factorial Analysis of Mixed Data) is a combination of PCA for numerical variables and
@@ -101,7 +101,7 @@ def land_page():
                 divided by the larger of those 2.
                 Here, we use Gower's Distance.""")
 
-    true_clust = pd.read_csv('heart_failure_short.csv')
+    true_clust = pd.read_csv('data/heart_failure_short.csv')
     true_clust['cluster'] = true_clust['DEATH_EVENT']
     helpers.evaluation_indices(toy,true_clust['cluster'])
 

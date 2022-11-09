@@ -7,7 +7,7 @@ from plotly.subplots import make_subplots
 import plotly.graph_objects as go
 
 
-import umap_hdbscan
+import algos.UMAP_HDBSCAN.umap_hdbscan as umap_hdbscan
 
 from sklearn.metrics.cluster import adjusted_rand_score
 from sklearn.metrics.cluster import adjusted_mutual_info_score
@@ -41,7 +41,7 @@ def choose_data():
                                                             'Penguins'])
         if select != ' --- Choose Dataset --- ':
             filename = '_'.join([word.lower() for word in select.split()])
-            df = pd.read_csv(f'{filename}.csv',sep=None).dropna()
+            df = pd.read_csv(f'data/{filename}.csv',sep=None).dropna()
             try:
                 st.dataframe(df)
             except:

@@ -3,7 +3,7 @@ import os
 from subprocess import check_output
 
 import streamlit as st
-import helpers
+import utilities.helpers as helpers
 import json
 
 def process(df, k):
@@ -16,7 +16,7 @@ def process(df, k):
     with open('k.json', 'w') as f:
         json.dump(json_data, f)
 
-    check_output("Rscript msclust.R", shell=True).decode()
+    check_output("Rscript algos/Kamila/kamila.R", shell=True).decode()
 
     df_out = pd.read_csv('temp_clustered.csv')
 
