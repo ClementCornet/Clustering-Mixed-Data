@@ -58,6 +58,7 @@ def choose_data():
     return df
 
 def true_clusters(df):
+    """Let the user define if a column represent 'true clusters'"""
     if min(df.shape) > 0 :
         opt = ['No']
         opt.extend(list(df.columns))
@@ -68,37 +69,48 @@ def true_clusters(df):
     return pd.DataFrame()
 
 def select_columns(df):
+    """Let the user define which columns to use or not"""
     if min(df.shape) > 0 :
         cols = st.multiselect('Use columns :',list(df.columns),list(df.columns))
         return df[cols]
     return df
 
 def display_process(func, df):
+    """Wrapper, to display the 'Process Data' section on an algorithm page
+
+        Parameters:
+            func (callable): function taking a DataFrame as an argument, returning it with a 'cluster' column
+            df (pandas DataFrame): DataFrame to process clustering on
+    """
+
     if type(df) == NoneType:
         st.empty()
         return
+    
+    # Let the user choose the number of cluster (cluster size for density based algorithms)
     k = 2
     if func != umap_hdbscan.process:
         k = st.select_slider('Choose number of clusters :', options=list(range(2,10)))
     else:
         k = st.select_slider('Minimum cluster size :', options=list(range(2,int(df.shape[0]/2))))
-    #st.dataframe(func(df,k))
-    func(df,k)
+    
+    func(df,k) # DATA PROCESSING HERE
 
+    # Display each cluster's population
     dfcol = pd.DataFrame(df['cluster']
                     .value_counts()).transpose()
-
-    
     st.dataframe(dfcol.reindex(sorted(dfcol.columns), axis=1))
 
-    FAMD_Plot(df)
 
+    # Representing clusters
+    FAMD_Plot(df)
     if st.button('UMAP'):
         UMAP_Plot(df)
+    
+    # Univariate Data Exploration
     opt = [' --- Show Distribution of a variable --- ']
     opt.extend(list(df.columns))
     col = st.selectbox('',opt)
-    
     if col in df.columns:
         fig = ''
         if df[col].dtype != 'object':
@@ -110,18 +122,20 @@ def display_process(func, df):
 
 
 def FAMD_Plot(df):
-    """ FAMD plot of clustered data, to diplay our results using dimensionality reduction """
+    """ FAMD plot of clustered data, to diplay our results using dimensionality reduction.
+    Each points cluser is represented by its color """
 
     if 'cluster' not in df.columns:
         return
 
-    df['cluster'] = df['cluster'].astype(str)
-    famd = prince.FAMD(n_components=3)
-    famd = famd.fit(df.iloc[:,:-1])
-    reduced = famd.row_coordinates(df.iloc[:,:-1])
+    df['cluster'] = df['cluster'].astype(str) # To not have color gradient next to the plot
+    famd = prince.FAMD(n_components=3) # 3 components = 3D, to plot
+    famd = famd.fit(df.iloc[:,:-1]) # Last column is clusters, so it must not affect FAMD coordinates (just color)
+    reduced = famd.row_coordinates(df.iloc[:,:-1]) # Get coordinates of each row
     reduced.columns = ['X','Y','Z']
     reduced['cluster'] = df['cluster']
 
+    # Each axe's inertia
     labs = {
         "X" : f"Component 0 - ({round(100*famd.explained_inertia_[0],2)}% inertia)",
         "Y" : f"Component 1 - ({round(100*famd.explained_inertia_[1],2)}% inertia)",
@@ -140,6 +154,11 @@ def FAMD_Plot(df):
     st.plotly_chart(fig)
 
 def evaluation_indices(df, truth):
+    """ Represent Evaluation indices for our clustered data.
+
+    Internal Indices: Silouhette Score using Gower's Distance
+    External Indices: Adjusted Rand Index (ARI) and Adjusted Mutual Info (AMI).
+    Note that External Indices are processed only if a 'thruth' column ad been set."""
     if df.shape == (0,0):
         st.empty()
         return
@@ -147,8 +166,6 @@ def evaluation_indices(df, truth):
     if 'cluster' not in df.columns:
         return
 
-     
-    #st.write("Internal Index : ")
     g_mat = gower.gower_matrix(df.loc[:,df.columns != 'cluster'])
     silouhette = silhouette_score(
                  g_mat, 
@@ -178,6 +195,8 @@ def evaluation_indices(df, truth):
 
 
 def UMAP_Plot(df,n_components=3, intersection=False):
+    """ UMAP plot of clustered data, to diplay our results using dimensionality reduction.
+    Each points cluser is represented by its color """
 
     if df.shape == (0,0):
         st.empty()
@@ -187,10 +206,10 @@ def UMAP_Plot(df,n_components=3, intersection=False):
         return
 
 
-    df2 = df.iloc[:,:-1]
+    df2 = df.iloc[:,:-1] # Do not use clusters' column to compute UMAP coordinates
 
+    # Scaling
     numerical = df2.select_dtypes(exclude='object')
-
     for c in numerical.columns:
         numerical[c] = (numerical[c] - numerical[c].mean())/numerical[c].std(ddof=0)
         
@@ -212,8 +231,9 @@ def UMAP_Plot(df,n_components=3, intersection=False):
         embedding = fit1 + fit2
 
 
-    um = pd.DataFrame(embedding.embedding_)
+    um = pd.DataFrame(embedding.embedding_) # Each points' UMAP coordinate 
 
+    # Actual Plotting
     um.columns = ['X','Y','Z']
     um['cluster'] = df['cluster']
     fig = px.scatter_3d(um, 
