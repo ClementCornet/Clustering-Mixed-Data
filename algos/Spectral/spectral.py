@@ -2,6 +2,11 @@ from scipy.spatial.distance import cdist
 from sklearn.preprocessing import StandardScaler
 import numpy as np
 from sklearn.cluster import SpectralClustering
+from sklearn.manifold import SpectralEmbedding
+import streamlit as st
+
+import pandas as pd
+import plotly.express as px
 
 
 def process(df, k):
@@ -32,6 +37,8 @@ def process(df, k):
     clusters = SpectralClustering(n_clusters=k,affinity="precomputed").fit_predict(
         np.interp(distances, (distances.min(), distances.max()), (0, +1)))
 
-    df['cluster'] = clusters
     
+
+    df['cluster'] = clusters
+  
     return df

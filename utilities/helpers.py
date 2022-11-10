@@ -1,3 +1,4 @@
+from sklearn.manifold import SpectralEmbedding
 import streamlit as st
 import pandas as pd
 from types import NoneType
@@ -14,6 +15,10 @@ import gower
 import umap
 
 import utilities.generate_dataset
+
+from scipy.spatial.distance import cdist
+from sklearn.preprocessing import StandardScaler
+import numpy as np
 
 #import sys
 #from pandas_profiling import ProfileReport
@@ -121,16 +126,25 @@ def display_process(func, df):
     func(df,k) # DATA PROCESSING HERE
 
     # Display each cluster's population
+    # TO CLEAN
     dfcol = pd.DataFrame(df['cluster']
                     .value_counts()).transpose()
     st.dataframe(dfcol.reindex(sorted(dfcol.columns), axis=1))
 
 
     # Representing clusters
-    FAMD_Plot(df)
-    if st.button('UMAP'):
-        UMAP_Plot(df)
+    #FAMD_Plot(df)
+    #if st.button('UMAP'):
+    #    UMAP_Plot(df)
     
+    tab1, tab2, tab3 = st.tabs(["FAMD","UMAP","Laplacian Eigenmaps"])
+    with tab1:
+        FAMD_Plot(df)
+    with tab2:
+        UMAP_Plot(df)
+    with tab3:
+        Laplacian_Eigenmaps(df)
+
     # Univariate Data Exploration
     opt = [' --- Show Distribution of a variable --- ']
     opt.extend(list(df.columns))
@@ -214,8 +228,15 @@ def evaluation_indices(df, truth):
         df2 = df.copy()
         df2['cluster'] = truth
 
-        if st.button('See Real Clusters'):
+        #if st.button('See Real Clusters'):
+        #    FAMD_Plot(df2)
+        tab1, tab2, tab3 = st.tabs(["FAMD","UMAP","Laplacian Eigenmaps"])
+        with tab1:
             FAMD_Plot(df2)
+        with tab2:
+            UMAP_Plot(df2)
+        with tab3:
+            Laplacian_Eigenmaps(df2)
 
 
 def UMAP_Plot(df,n_components=3, intersection=False):
@@ -266,4 +287,39 @@ def UMAP_Plot(df,n_components=3, intersection=False):
     fig.update_layout(showlegend=False)
     fig.update_layout(margin=dict(l=0, r=0, b=0, t=0))
     st.write('UMAP plot of Clusters :')
+    st.plotly_chart(fig)
+
+def Laplacian_Eigenmaps(df):
+    numerical = df.select_dtypes('number')
+    categorical = df.select_dtypes('object')
+
+    # Scaling
+    scaler = StandardScaler()
+    numerical = scaler.fit_transform(numerical)
+    categorical = categorical.apply(lambda x: x.replace(x.unique(),list(range(1,1+len(x.unique())))))
+
+    # Gamma parameter to compute pairwise distances
+    gamma = np.mean(np.std(numerical))/2
+
+    # Compute pairwise distance matrix
+    distances = (cdist(numerical,numerical,'euclidean')) + cdist(categorical,categorical,'matching')*gamma
+    distances = np.nan_to_num(distances)
+    for i in range(len(distances[0])):
+        for j in range(len(distances)):
+            distances[i][j] = 1-distances[i][j]
+    distances = np.nan_to_num(distances)
+
+    
+
+    ###### LAPLACIAN EMBEDDINGS
+    lap = SpectralEmbedding(3,affinity="precomputed").fit_transform(np.interp(distances, (distances.min(), distances.max()), (0, +1)))
+    #st.write(lap)
+    lap_df = pd.DataFrame(lap)
+    lap_df.columns = ['X','Y','Z']
+    lap_df['cluster'] = df['cluster']
+
+    fig = px.scatter_3d(lap_df,x='X',y='Y',z='Z',color='cluster')
+    fig.update_layout(showlegend=False)
+    fig.update_layout(margin=dict(l=0, r=0, b=0, t=0))
+    st.write('Laplacian Eigenmaps Embeddings')
     st.plotly_chart(fig)
