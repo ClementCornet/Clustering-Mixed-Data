@@ -12,7 +12,7 @@ from sklearn.metrics.cluster import adjusted_rand_score
 from sklearn.metrics.cluster import adjusted_mutual_info_score
 from sklearn.metrics import silhouette_score
 import gower
-import umap
+import umap.umap_ as umap
 
 import utilities.generate_dataset
 
